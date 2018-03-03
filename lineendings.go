@@ -73,23 +73,25 @@ func splitIntoChunks(arr []string, chunkSize int) [][]string {
 }
 
 func main() {
-	searchDir := os.Args[1]
+	searchDirs := os.Args[1:]
 	c := make(chan Endings)
 	chunkSize := 1000
 
-	fileList := getFileList(searchDir)
-
 	count := Endings{0, 0}
-	for _, chunk := range splitIntoChunks(fileList, chunkSize) {
-		for _, file := range chunk {
-			go getFileEndings(file, c)
-		}
+	for _, searchDir := range searchDirs {
+		fileList := getFileList(searchDir)
 
-		for _ = range chunk {
-			result := <-c
+		for _, chunk := range splitIntoChunks(fileList, chunkSize) {
+			for _, file := range chunk {
+				go getFileEndings(file, c)
+			}
 
-			count.crlf += result.crlf
-			count.lf += result.lf
+			for _ = range chunk {
+				result := <-c
+
+				count.crlf += result.crlf
+				count.lf += result.lf
+			}
 		}
 	}
 
